@@ -10,14 +10,21 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@mdi/font": "^7.4.47",
-    "nuxt": "^3.13.0",
-    "vue": "latest",
-    "vue-router": "latest"
+    "@mdi/font": "7.4.47",
+    "date-fns": "4.1.0",
+    "decimal.js": "10.4.3",
+    "nuxt": "3.13.2",
+    "nuxt-app": "file:",
+    "pinia": "2.2.0",
+    "vee-validate": "4.14.3",
+    "vue": "3.5.12",
+    "vue-i18n": "9.14.1",
+    "vue-router": "4.4.0",
+    "vue3-apexcharts": "1.7.0",
+    "vuetify": "3.6.11"
   },
   "devDependencies": {
-    "sass-embedded": "^1.79.5",
-    "vite-plugin-vuetify": "^2.0.4",
-    "vuetify": "^3.7.3"
+    "sass-embedded": "1.79.5",
+    "vite-plugin-vuetify": "2.0.4"
   }
 }

@@ -1,0 +1,8 @@
+.v-data-table thead th {
+  font-weight: bold !important;
+}
+
+.v-timeline__line--truncate {
+  overflow: hidden;
+  height: calc(100% - 2rem);
+}

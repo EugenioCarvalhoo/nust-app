@@ -1,20 +1,25 @@
 <template>
     <div>
         <v-container>
-
             <v-sheet class="mx-auto mt-16 pa-6" max-width="600" elevation="1" rounded>
                 <v-row class="py-3 text-center" justify="center">
-                    <div>
+                    <!-- <div>
                         <v-img rounded="lg" :width="150" aspect-ratio="16/9" cover src="/icons/Carvalho.png"></v-img>
-                    </div>
+                    </div> -->
                 </v-row>
                 <v-form v-model="form" @submit.prevent="onSubmit">
-                    <v-text-field variant="underlined" v-model="formValue.emailOrLogin"
+                    <v-text-field variant="underlined" v-model="formValue.login"
                         :rules="emailOrLoginRules" 
-                        label="Login ou Email"></v-text-field>
+                        label="Login"></v-text-field>
 
-                    <v-text-field variant="underlined" v-model="formValue.password" 
-                        label="Senha" type="password" :rules="passwordRules"></v-text-field>
+                    <v-text-field variant="underlined" v-model="formValue.oldPassword" 
+                        label="Senha Temporária" type="password" :rules="passwordRules"></v-text-field>
+
+                        <v-text-field variant="underlined" v-model="formValue.newPassword" 
+                        label="Digite sua senha" type="password" :rules="passwordRules"></v-text-field>
+                    
+                        <v-text-field variant="underlined" v-model="formValue.confirmNewPassword" 
+                        label="Confirme sua senha" type="password" :rules="passwordRules"></v-text-field>
                     
                     <v-row class="pa-3">
                         <span v-if="loginError" class="text-red-darken-3">Login ou senha inválido!</span>
@@ -30,13 +35,22 @@
 <script lang="ts" setup  >
 import { useDataStore } from '~/composables/data';
 
+ type ActiveUserType = {
+      login: string
+      oldPassword: string
+      newPassword: string
+      confirmNewPassword: string
+}
+
 
 const form = ref(false)
 const loading = ref(false)
 
-const formValue = ref({
-  emailOrLogin: '',
-  password: ''
+const formValue = ref<ActiveUserType>({
+    login: '',
+    oldPassword: '',
+    newPassword: '',
+    confirmNewPassword: '',
 })
 
 const ruleRequired = (value: string) => !!value || 'Required.'
@@ -53,38 +67,11 @@ const onSubmit = async () => {
     loading.value = true
 const runtimeConfig = useRuntimeConfig()
 
-$fetch<{ token: string, role: string, bussinessName: string, firstName: string, lastName: string }>(`${runtimeConfig.public.baseUrl}/auth/login`, {
-    method: 'POST',
-    body: {
-      login: formValue.value.emailOrLogin,
-      password: formValue.value.password
-    }   
+$fetch(`${runtimeConfig.public.baseUrl}/auth/active-user`, {
+    method: 'PUT',
+    body: formValue.value
   }).then((data) => {
-    const token = useCookie('token')
-    token.value = data.token
-    const getObjectLoginOrEmail = () => {
-        const result = {
-            email: '',
-            login: ''
-        }
-        if (data.role.toUpperCase() === 'ADMIN' || data.role.toUpperCase() === 'ASSISTANT_ADMIN') {
-            result.email = formValue.value.emailOrLogin     
-        } else {
-            result.login = formValue.value.emailOrLogin
-        }
-
-        return result
-    }
-    
-    const newData = { 
-        role: data.role, 
-        bussinessName: data.bussinessName,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        ...getObjectLoginOrEmail()
-     }
-    useDataStore().setData(newData)
-    navigateTo('/app')   
+    navigateTo('/')   
   }).catch((error) => {
       if (error)  {
         loading.value = false

@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar class="px-3 bg-white" density="compact" flat :border="true">
+    <v-app-bar class="px-3 bg-blue-grey-darken-3" density="compact" flat :border="true">
         <v-avatar class="hidden-md-and-up" color="grey-darken-1" size="32"></v-avatar>
 
         <v-spacer></v-spacer>
