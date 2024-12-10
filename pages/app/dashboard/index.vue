@@ -14,12 +14,12 @@
             <div class="mt-4 d-flex align-center" style="gap: 20px;">
               <v-card v-if="tableAction == 'monthBalance'" class="bg-white  px-3 py-2" style="width: 100px">
                 <v-select  @update:modelValue="changeDatesInMonth" v-model="infoDatesInMonth.startOfMonthDate"
-                  :items="dataSelectDatesInMonthInitial" variant="underlined" label="Data do inicio"></v-select>
+                  :items="dataSelectDatesInMonthInitial" variant="underlined" label="Data do início"></v-select>
               </v-card>
 
               <v-card v-if="tableAction == 'weekBalance'" class="bg-white px-3 py-2" style="width: 180px">
                 <v-select  @update:modelValue="changetDatesweek" v-model="infoDatesweek.startOfWeek"
-                  :items="dataSelectDatesweekInitial" variant="underlined" label="Dia do inicio"></v-select>
+                  :items="dataSelectDatesweekInitial" variant="underlined" label="Dia do início"></v-select>
               </v-card>
 
               <v-card  class="bg-white px-3 py-2" style="width: 250px">
@@ -107,11 +107,8 @@
 </template>
 
 <script lang="ts" setup>
-import BalanceCard from "./balance-card.vue";
-import SimpleTable from "~/components/simple-table.vue";
 import { Decimal } from 'decimal.js';
 import { startOfMonth, eachDayOfInterval, format, startOfWeek, addDays, addMonths, subDays } from 'date-fns';
-import { Title } from "#build/components";
 
 
 const orderes = ref<{ label: string, value: number | string }[]>([])
@@ -137,10 +134,7 @@ type ResumeType = {
 
 const resume = ref<ResumeType[]>([])
 
-const tab = ref(null);
-
 const numberFormat = useNumberFormatter()
-const totalExpenceFuture = ref(0)
 const fetchAuth = useFetchAuth()
 
 
@@ -235,26 +229,6 @@ const changetDatesweek = (value?: any) => {
   findData(infoDatesweek.value.datesweek, infoDatesweek)
 
   return value
-}
-
-const refrashData = ref({
-  active: true,
-  countDown: 15
-})
-const refrash = () => {
-  refrashData.value = {
-    active: false,
-    countDown: 15
-  }
-
-  const interval = setInterval(() => {
-    refrashData.value.countDown -= 1;
-
-    if (refrashData.value.countDown <= 0) {
-      clearInterval(interval);
-      refrashData.value.active = true;
-    }
-  }, 1000);
 }
 
 
@@ -362,9 +336,13 @@ const findData = (rengeDate: any, recept: any) => {
 
 const inputIntervalDate = ref()
 
+const compareDatesEqual = (date1: Date, date2: Date) => {
+  return date1.getTime() == date2.getTime()
+}
+
 watch(inputIntervalDate, () => {
-  if (inputIntervalDate.value == infoDatesInMonth.value.datesInMonth) return
-  if (inputIntervalDate.value == infoDatesweek.value.datesweek) return
+  if (compareDatesEqual(inputIntervalDate.value[0], inputIntervalDate.value.datesInMonth[0])) return
+  if (compareDatesEqual(inputIntervalDate.value[0], infoDatesweek.value.datesweek[0])) return
   findData(inputIntervalDate.value, infoDatesweek)
 })
 
@@ -416,28 +394,56 @@ const textIntervalDate = computed(() => {
   return dateIntervalFormat(infoDatesweek.value.datesweek)
 })
 
-const inputDateWeek = computed(() => {
-  return dateIntervalFormat(infoDatesweek.value.datesweek)
-})
-
-
-const expenceFuture = ref<any[]>([])
-
-const findExpenseFomIntervalDate = () => {
-  // fetchAuth.get<any[]>("/expense/interval-date", {
-  //   params: {
-  //     startDate: formattedDate(new Date()),
-  //     endDate: formattedDate(infoDatesInMonth.value.datesInMonth[infoDatesInMonth.value.datesInMonth.length - 1]),
-  //   }
-  // }).then((element) => {
-  //   expenceFuture.value = element as any[]
-  //   totalExpenceFuture.value = expenceFuture.value.reduce((a, c) => a.plus(c.amount), new Decimal(0))
-  // });
+type RefCodesType = {
+     id?: number
+     type: string
+     code: string
+     name: string
+     description: string 
 }
 
+
+const cahceChangeDate = ref<{
+  item: RefCodesType,
+  data: { initialDate: string, initialDay: string }
+}>()
+
+
 onMounted(() => {
-  findData(datesweek, infoDatesweek)
-  findExpenseFomIntervalDate()
+
+  fetchAuth.get<RefCodesType[]>("/refcodes/type/balance/code/changeDate").then(el => {
+    if (!el) return
+      const data: {  initialDate: string, initialDay: string } = JSON.parse(el[0].name)
+      cahceChangeDate.value = {
+        item: el[0],
+        data
+      }
+      if (tableAction.value == 'weekBalance') {
+        changetDatesweek(data.initialDay)
+        infoDatesInMonth.value.startOfMonthDate = data.initialDate
+      }
+
+      if (tableAction.value == 'monthBalance') {
+        changeDatesInMonth(data.initialDate)
+        infoDatesweek.value.startOfWeek = data.initialDay
+      }
+  })
 });
+
+onUnmounted(() => {
+  if (!cahceChangeDate.value) return
+  const { data, item }  = cahceChangeDate.value
+  if (infoDatesInMonth.value.startOfMonthDate == data.initialDate && 
+  infoDatesweek.value.startOfWeek == data.initialDay
+  ) return
+  fetchAuth.put(`/refcodes/${item.id}`, {
+    ...item,
+    whitTenantId: true,
+    name: JSON.stringify({
+      initialDate: infoDatesInMonth.value.startOfMonthDate,
+      initialDay: infoDatesweek.value.startOfWeek
+    })
+  }).then(() => {})
+})
 
 </script>

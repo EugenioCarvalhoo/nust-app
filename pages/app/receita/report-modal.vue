@@ -174,7 +174,7 @@ const getReportModel = (reportText: string) => {
           amount: parseCurrency(amount),
           status: "PAGO",
           dueDate: reportModel.dateReport,
-          category: "OUTROS",
+          category: "NOTAS-VALES",
         };
 
         if (!validCurrency(amount)) {
